@@ -29,7 +29,7 @@ let authors = [
 
 /*
 
- * English:
+
  * It might make more sense to associate a book with its author by storing the author's id in the context of the book instead of the author's name
  * However, for simplicity, we will store the author's name in connection with the book
 
@@ -87,49 +87,42 @@ let books = [
   },
 ]
 
-/*
-  you can remove the placeholder query once your first one has been implemented 
-*/
-
 const typeDefs = `
 
 type Query {
     bookCount: Int!
     authorCount: Int!
+    allBooks(author: String!): [Book!]!
+    allAuthors: [Author!]!
 }
 
-`
-// type Book {
-//     title: String!
-//     published: Int!
-//     author: String!
-//     genres: String!
-//     id: ID!
-// }
+type Book {
+    title: String!
+    published: Int!
+    author: String!
+    genres: [String!]!
+    id: ID!
+}
 
-// type Author {
-//     name: String!
-//     born: String!
-//     id: ID!
-// }
-// allBooks: [Book!]!
-// findBook(title: String!): Book
-// type Query {
-//       allAuthors: [Author!]!
-//     findAuthor(name: String!): Author
-//   }
+type Author {
+    name: String!
+    born: Int!
+    bookCount: Int!
+    id: ID!
+}
+`
 
 const resolvers = {
   Query: {
     bookCount: () => books.length,
     authorCount: () => authors.length,
-    // allBooks: () => books,
-    // findBook: (root, args) => books.find((b) => b.title === args.title),
+    allBooks: (root, args) => books.filter((b) => b.author === args.author),
+    allAuthors: () => authors,
   },
-  //   Query: {
-  //     allAuthors: () => authors,
-  //     findAuthor: (root, args) => authors.find((a) => a.name === args.name),
-  //   },
+  Author: {
+    bookCount: (root, args) =>
+      books.filter((b) => b.author === root.name).length,
+  },
 }
 
 const server = new ApolloServer({
