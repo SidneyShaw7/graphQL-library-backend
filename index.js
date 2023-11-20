@@ -1,6 +1,28 @@
 const { ApolloServer } = require('@apollo/server')
 const { startStandaloneServer } = require('@apollo/server/standalone')
 const { v1: uuid } = require('uuid')
+const { GraphQLError } = require('graphql')
+const jwt = require('jsonwebtoken')
+
+const mongoose = require('mongoose')
+mongoose.set('strictQuery', false)
+const Author = require('./models/author')
+const Book = require('./models/book')
+
+require('dotenv').config()
+
+const MONGODB_URI = process.env.MONGODB_URI
+
+console.log('connecting to', MONGODB_URI)
+
+mongoose
+  .connect(MONGODB_URI)
+  .then(() => {
+    console.log('connected to MongoDB')
+  })
+  .catch((error) => {
+    console.log('error connection to MongoDB:', error.message)
+  })
 
 let authors = [
   {
@@ -19,22 +41,14 @@ let authors = [
     born: 1821,
   },
   {
-    name: 'Joshua Kerievsky', // birthyear not known
+    name: 'Joshua Kerievsky',
     id: 'afa5b6f2-344d-11e9-a414-719c6709cf3e',
   },
   {
-    name: 'Sandi Metz', // birthyear not known
+    name: 'Sandi Metz',
     id: 'afa5b6f3-344d-11e9-a414-719c6709cf3e',
   },
 ]
-
-/*
-
-
- * It might make more sense to associate a book with its author by storing the author's id in the context of the book instead of the author's name
- * However, for simplicity, we will store the author's name in connection with the book
-
-*/
 
 let books = [
   {
@@ -128,9 +142,9 @@ type Mutation {
 
 const resolvers = {
   Query: {
-    bookCount: () => books.length,
-    authorCount: () => authors.length,
-    allBooks: (root, args) => {
+    bookCount: async () => Book.collection.countDocuments(),
+    authorCount: async () => Author.collection.countDocuments(),
+    allBooks: async (root, args) => {
       if (args.author && args.genre) {
         return books.filter(
           (b) => b.author === args.author && b.genres.includes(args.genre)
