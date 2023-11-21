@@ -145,23 +145,37 @@ const resolvers = {
     bookCount: async () => Book.collection.countDocuments(),
     authorCount: async () => Author.collection.countDocuments(),
     allBooks: async (root, args) => {
-      if (args.author && args.genre) {
-        return books.filter(
-          (b) => b.author === args.author && b.genres.includes(args.genre)
-        )
-      } else if (args.author) {
-        return books.filter((b) => b.author === args.author)
-      } else if (args.genre) {
-        return books.filter((b) => b.genres.includes(args.genre))
-      } else {
-        return books
+      // if (args.author && args.genre) {
+      //   return books.filter(
+      //     (b) => b.author === args.author && b.genres.includes(args.genre)
+      //   )
+      // } else if (args.author) {
+      //   return books.filter((b) => b.author === args.author)
+      // } else if (args.genre) {
+      //   return books.filter((b) => b.genres.includes(args.genre))
+      // } else {
+      const filter = {}
+
+      if (args.author) {
+        filter.author = args.author
       }
+
+      if (args.genre) {
+        filter.genres = args.genre
+      }
+
+      return Book.find(filter)
     },
-    allAuthors: (root, args) => {
-      authors.map((a) => {
-        return !a.born ? (a.born = null) : a.born
-      })
-      return authors
+    allAuthors: async (root, args) => {
+      // authors.map((a) => {
+      //   return !a.born ? (a.born = null) : a.born
+      // })
+      // return authors
+      await Author.updateMany(
+        { born: { $exists: false } },
+        { $set: { born: null } }
+      )
+      return Author.find({})
     },
   },
   Author: {
